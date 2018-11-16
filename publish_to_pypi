@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# Tool for packaging and publishing Python projects on PyPI
+#
+# It requires 'pypi' and 'testpypi' sections to be defined in .pypirc.
+
+set -euo pipefail
+
+APP_NAME="$(basename "$0")"
+APP_VER="0.0.1"
+test=""
+
+display_version() {
+  printf "%s version %s\\n" "$APP_NAME" "$APP_VER"
+}
+
+display_help() {
+  display_version
+  cat <<HELP
+Usage: ${APP_NAME} [OPTIONS]
+AVAILABLE OPTIONS:
+-v  Print version number
+-h  Print this help summary page
+-t  Publish to Test PyPI
+HELP
+}
+
+get_opts() {
+  while getopts ":vht" opt; do
+    case $opt in
+      v)
+        display_version
+        exit 0
+        ;;
+      h)
+        display_help
+        exit 0
+        ;;
+      t)
+        test="test"
+        ;;
+      :)
+        die "Option -${OPTARG} requires an argument"
+        ;;
+      *)
+        die "Invalid option -${OPTARG}"
+        ;;
+    esac
+  done
+}
+
+pip_twine() {
+  if ! pip list | grep -q '^twine\s'; then
+    pip -q install twine
+  fi
+}
+
+md_to_rst() {
+  for f in *.md; do
+    pandoc -s -f gfm -t rst "$f" > "${f%.md}.rst"
+  done
+}
+
+cleanup() {
+  rm -rf ./build ./dist ./*.egg-info
+  for f in *.md; do
+    rm -f "${f%.md}.rst"
+  done
+}
+
+main() {
+  get_opts "$@"
+  pip_twine
+  cleanup
+  md_to_rst
+  python setup.py package
+  twine upload -r "${test}pypi" --skip-existing dist/* || true
+  cleanup
+}
+
+main "$@"
