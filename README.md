@@ -1,3 +1,3 @@
 # publish_to_pypi
-Tool for packaging and publishing Python projects on PyPI
+Tool to package and publish Python projects on PyPI
 
