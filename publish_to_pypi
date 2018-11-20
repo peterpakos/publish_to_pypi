@@ -23,7 +23,7 @@
 set -euo pipefail
 
 readonly APP_NAME="$(basename "$0")"
-readonly APP_VER="1.1.0"
+readonly APP_VER="1.2.0"
 test=""
 
 display_version() {
@@ -77,19 +77,33 @@ pip_twine() {
 }
 
 md_to_rst() {
-  for f in *.md; do
+  if ! command -v pandoc >/dev/null 2>&1; then
+    printf "pandoc command not found, skipping md to rst conversion...\\n" >&2
+    return 0
+  fi
+
+  for f in ./*.md; do
+    [[ -f "$f" ]] || continue
     pandoc -s -f gfm -t rst "$f" > "${f%.md}.rst"
   done
 }
 
 cleanup() {
-  rm -rf ./build ./dist ./*.egg-info ./__pycache__ ./*/*.pyc ./.tox
-  for f in *.md; do
+  rm -rf ./build ./dist ./*.egg-info ./__pycache__ ./*/*.pyc ./*/__pycache__ ./.tox
+  for f in ./*.md; do
     rm -f "${f%.md}.rst"
   done
 }
 
+check_project_dir() {
+  if [[ ! -f "./setup.py" || $(find . -name '*.py' -type f | wc -l) -eq 0 ]]; then
+    printf "Not in Python project directory, exiting...\\n" >&2
+    exit 1
+  fi
+}
+
 main() {
+  check_project_dir
   get_opts "$@"
   pip_twine
   cleanup
