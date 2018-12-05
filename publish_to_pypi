@@ -23,11 +23,11 @@
 set -euo pipefail
 
 readonly APP_NAME="$(basename "$0")"
-readonly APP_VER="1.2.0"
+readonly APP_VER="1.2.1"
 test=""
 
 display_version() {
-  printf "%s version %s\\n" "$APP_NAME" "$APP_VER"
+  printf "%s %s\\n" "$APP_NAME" "$APP_VER"
 }
 
 display_help() {
@@ -103,8 +103,8 @@ check_project_dir() {
 }
 
 main() {
-  check_project_dir
   get_opts "$@"
+  check_project_dir
   pip_twine
   cleanup
   md_to_rst
