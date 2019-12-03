@@ -78,23 +78,8 @@ pip_twine() {
   fi
 }
 
-md_to_rst() {
-  if ! command -v pandoc >/dev/null 2>&1; then
-    printf "pandoc command not found, skipping md to rst conversion...\\n" >&2
-    return 0
-  fi
-
-  for f in ./*.md; do
-    [[ -f "$f" ]] || continue
-    pandoc -s -f gfm -t rst "$f" > "${f%.md}.rst"
-  done
-}
-
 cleanup() {
   rm -rf ./build ./dist ./*.egg-info ./__pycache__ ./*/*.pyc ./*/__pycache__ ./.tox
-  for f in ./*.md; do
-    rm -f "${f%.md}.rst"
-  done
 }
 
 check_project_dir() {
@@ -109,7 +94,6 @@ main() {
   check_project_dir
   pip_twine
   cleanup
-  md_to_rst
   python setup.py package
   twine upload -r "${test}pypi" --skip-existing dist/* || true
   cleanup
